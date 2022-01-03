@@ -6,8 +6,12 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField]
     private float maxSpeed;
+    [SerializeField]
+    private float jumpPower;
 
     private bool isWalk = false;
+    private bool isJump = false;
+    private bool isGround = false;
 
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
@@ -23,15 +27,17 @@ public class PlayerController : MonoBehaviour
         anim = GetComponent<Animator>();
     }
 
-
+    // 단발성 입력
     private void Update() {
         SmoothStop();
         DirectionSprite();
+        Jump();
     }
 
-
+    // 지속적 입력
     private void FixedUpdate() {
         Move();
+        CheckGround();
     }
 
 
@@ -73,4 +79,36 @@ public class PlayerController : MonoBehaviour
         else if (Input.GetKey(KeyCode.RightArrow) && spriteRenderer.flipX)
             spriteRenderer.flipX = false;
     }
+
+
+    private void Jump(){
+        if (Input.GetButtonDown("Jump") && !isJump && isGround){
+            isJump = true;
+            isGround = false;
+            rigid.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
+            anim.SetBool("isJump", isJump);
+        }
+    }
+
+
+    private void CheckGround(){
+        if (rigid.velocity.y < 0) {
+            Debug.DrawRay(rigid.position, 
+                Vector2.down,
+                new Color(0, 1, 0));
+            
+            RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, 
+                                    Vector2.down, 
+                                    1f,
+                                    LayerMask.GetMask("Platform"));
+
+            if (rayHit.collider != null && rayHit.distance < 0.5f) {
+                isJump = false;
+                isGround = true;
+                anim.SetBool("isJump", isJump);
+                Debug.Log(rayHit.collider.name);
+            }
+        }
+    }
+
 }
