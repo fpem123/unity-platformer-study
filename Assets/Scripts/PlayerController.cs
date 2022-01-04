@@ -16,6 +16,7 @@ public class PlayerController : MonoBehaviour
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
     Animator anim;
+    CapsuleCollider2D capsuleCollider;
 
 
 
@@ -25,6 +26,7 @@ public class PlayerController : MonoBehaviour
         rigid = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
+        capsuleCollider = GetComponent<CapsuleCollider2D>();
     }
 
     // 단발성 입력
@@ -45,7 +47,7 @@ public class PlayerController : MonoBehaviour
     private void Move() {
         // Move
         float h = Input.GetAxisRaw("Horizontal");
-        Debug.Log(h);
+
         if (h == 0f) {
             rigid.constraints = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezeRotation;
         }
@@ -106,14 +108,14 @@ public class PlayerController : MonoBehaviour
             
             RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, 
                                     Vector2.down, 
-                                    1f,
+                                    capsuleCollider.bounds.extents.y + 0.2f,
                                     LayerMask.GetMask("Platform"));
-
-            if (rayHit.collider != null && rayHit.distance < 0.5f) {
+            
+            if (rayHit.collider != null) {
+                Debug.Log(rayHit.collider);
                 isJump = false;
                 isGround = true;
                 anim.SetBool("isJump", isJump);
-                Debug.Log(rayHit.collider.name);
             }
         }
     }
