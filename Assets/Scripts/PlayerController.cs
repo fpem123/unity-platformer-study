@@ -4,14 +4,17 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField]
-    private float maxSpeed;
-    [SerializeField]
-    private float jumpPower;
+    [SerializeField] private float maxSpeed;
+    [SerializeField] private float jumpPower;
+    [SerializeField] private float invinciTime;
+    [SerializeField] private float hitTime;
 
     private bool isWalk = false;
     private bool isJump = false;
     private bool isGround = false;
+    private bool isHit = false;
+
+    private float currentHit = 0;
 
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
@@ -41,6 +44,14 @@ public class PlayerController : MonoBehaviour
         Move();
         MoveAnim();
         CheckGround();
+        TimeCount();
+    }
+
+    private void TimeCount() {
+        currentHit -= Time.deltaTime;
+
+        if (currentHit <= 0)
+            isHit = false;
     }
 
 
@@ -48,11 +59,11 @@ public class PlayerController : MonoBehaviour
         // Move
         float h = Input.GetAxisRaw("Horizontal");
 
-        if (h == 0f) {
-            rigid.constraints = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezeRotation;
+        if (h == 0f && !isHit) {
+            FreezeX();
         }
         else {
-            rigid.constraints = RigidbodyConstraints2D.FreezeRotation;
+            UnFreezeX();
 
             rigid.AddForce(Vector2.right * h * rigid.gravityScale, ForceMode2D.Impulse);
 
@@ -123,4 +134,39 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void OnCollisionEnter2D(Collision2D other) {
+        if (other.gameObject.tag == "Enemy") {
+            OnDamaged(other.transform.position);
+        }
+    }
+
+    private void OnDamaged(Vector2 targetPos) {
+        gameObject.layer = 9;
+        
+        spriteRenderer.color = new Color(1, 1, 1, 0.4f);
+
+        int direction = transform.position.x - targetPos.x > 0 ? 1 : -1;
+
+        currentHit = hitTime;
+        isHit = true;
+
+        rigid.AddForce(new Vector2(direction, 1) * 7, ForceMode2D.Impulse);
+
+        anim.SetTrigger("doDamaged");
+
+        Invoke("OffDamaged", invinciTime);
+    }
+
+    void OffDamaged() {
+        gameObject.layer = 8;
+        spriteRenderer.color = new Color(1, 1, 1, 1f);
+    }
+
+    private void FreezeX() {
+        rigid.constraints = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezeRotation;
+    }
+
+    private void UnFreezeX() {
+        rigid.constraints = RigidbodyConstraints2D.FreezeRotation;
+    }
 }
