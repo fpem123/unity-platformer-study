@@ -112,10 +112,13 @@ public class PlayerController : MonoBehaviour
                                     LayerMask.GetMask("Platform"));
             
             if (rayHit.collider != null) {
-                Debug.Log(rayHit.collider);
                 isJump = false;
                 isGround = true;
                 anim.SetBool("isJump", isJump);
+            } 
+            else {
+                isJump = true;
+                isGround = false;
             }
         }
     }
