@@ -37,6 +37,7 @@ public class PlayerController : MonoBehaviour
     // 지속적 입력
     private void FixedUpdate() {
         Move();
+        MoveAnim();
         CheckGround();
     }
 
@@ -44,16 +45,22 @@ public class PlayerController : MonoBehaviour
     private void Move() {
         // Move
         float h = Input.GetAxisRaw("Horizontal");
-        rigid.AddForce(Vector2.right * h, ForceMode2D.Impulse);
-
-        if (rigid.velocity.x > maxSpeed) {  // right
-            rigid.velocity = new Vector2(maxSpeed, rigid.velocity.y);
+        Debug.Log(h);
+        if (h == 0f) {
+            rigid.constraints = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezeRotation;
         }
-        else if (rigid.velocity.x < -maxSpeed) {    // left
-            rigid.velocity = new Vector2(-maxSpeed, rigid.velocity.y);
-        }
+        else {
+            rigid.constraints = RigidbodyConstraints2D.FreezeRotation;
 
-        MoveAnim();
+            rigid.AddForce(Vector2.right * h * rigid.gravityScale, ForceMode2D.Impulse);
+
+            if (rigid.velocity.x > maxSpeed) {  // right
+                rigid.velocity = new Vector2(maxSpeed, rigid.velocity.y);
+            }
+            else if (rigid.velocity.x < -maxSpeed) {    // left
+                rigid.velocity = new Vector2(-maxSpeed, rigid.velocity.y);
+            }
+        }
     }
 
     private void MoveAnim() {
@@ -92,7 +99,7 @@ public class PlayerController : MonoBehaviour
 
 
     private void CheckGround(){
-        if (rigid.velocity.y < 0) {
+        if (rigid.velocity.y <= 0) {
             Debug.DrawRay(rigid.position, 
                 Vector2.down,
                 new Color(0, 1, 0));
