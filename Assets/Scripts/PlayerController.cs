@@ -4,22 +4,22 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    [SerializeField] private float speed;
     [SerializeField] private float maxSpeed;
     [SerializeField] private float jumpPower;
     [SerializeField] private float invinciTime;
-    [SerializeField] private float hitTime;
 
     private bool isWalk = false;
     private bool isJump = false;
     private bool isGround = false;
-    private bool isHit = false;
 
-    private float currentHit = 0;
+    [SerializeField] private GameManager gameManager;
 
-    Rigidbody2D rigid;
-    SpriteRenderer spriteRenderer;
-    Animator anim;
-    CapsuleCollider2D capsuleCollider;
+    private Rigidbody2D rigid;
+    private SpriteRenderer spriteRenderer;
+    private Animator anim;
+    private CapsuleCollider2D capsuleCollider;
+
 
 
 
@@ -48,10 +48,6 @@ public class PlayerController : MonoBehaviour
     }
 
     private void TimeCount() {
-        currentHit -= Time.deltaTime;
-
-        if (currentHit <= 0)
-            isHit = false;
     }
 
 
@@ -59,13 +55,11 @@ public class PlayerController : MonoBehaviour
         // Move
         float h = Input.GetAxisRaw("Horizontal");
 
-        if (h == 0f && !isHit) {
-            FreezeX();
+        if (h == 0) {
+            rigid.velocity = new Vector2(0, rigid.velocity.y);
         }
         else {
-            UnFreezeX();
-
-            rigid.AddForce(Vector2.right * h * rigid.gravityScale, ForceMode2D.Impulse);
+            rigid.AddForce(Vector2.right * h * rigid.gravityScale * speed, ForceMode2D.Impulse);
 
             if (rigid.velocity.x > maxSpeed) {  // right
                 rigid.velocity = new Vector2(maxSpeed, rigid.velocity.y);
@@ -84,7 +78,6 @@ public class PlayerController : MonoBehaviour
 
         anim.SetBool("isWalk", isWalk);
     }
-
 
     private void SmoothStop(){
         if (Input.GetButtonUp("Horizontal")) {
@@ -136,19 +129,48 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D other) {
         if (other.gameObject.tag == "Enemy") {
+            if(rigid.velocity.y < 0 && transform.position.y > other.transform.position.y)
+                OnAttack(other.transform);
+            else
+                OnDamaged(other.transform.position);
+        }
+        else if (other.gameObject.tag == "Trap")
             OnDamaged(other.transform.position);
+    }
+
+    private void OnTriggerEnter2D(Collider2D other) {
+        if (other.gameObject.tag == "Item") {
+            ItemController itemController = other.GetComponent<ItemController>();
+            
+            // Deactive Item
+            itemController.DeactiveItem();
+        }
+        else if (other.gameObject.tag == "Finish") {
+            gameManager.NextStage();
         }
     }
 
+
+    private void OnAttack(Transform enemy) {
+        AttackReaction();
+
+        EnemyController enemyController = enemy.GetComponent<EnemyController>();
+        enemyController.OnDamaged();
+    }
+
+    private void AttackReaction() {
+        rigid.AddForce(Vector2.up * 10, ForceMode2D.Impulse);
+    }
+
+
     private void OnDamaged(Vector2 targetPos) {
+        gameManager.HealthDown();
+
         gameObject.layer = 9;
         
         spriteRenderer.color = new Color(1, 1, 1, 0.4f);
 
         int direction = transform.position.x - targetPos.x > 0 ? 1 : -1;
-
-        currentHit = hitTime;
-        isHit = true;
 
         rigid.AddForce(new Vector2(direction, 1) * 7, ForceMode2D.Impulse);
 
@@ -157,16 +179,22 @@ public class PlayerController : MonoBehaviour
         Invoke("OffDamaged", invinciTime);
     }
 
-    void OffDamaged() {
+    private void OffDamaged() {
         gameObject.layer = 8;
         spriteRenderer.color = new Color(1, 1, 1, 1f);
     }
 
-    private void FreezeX() {
-        rigid.constraints = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezeRotation;
+    public void OnDead() {
+        spriteRenderer.color = new Color(1, 1, 1, 0.4f);
+
+        spriteRenderer.flipY = true;
+
+        capsuleCollider.enabled = false;
+
+        rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
     }
 
-    private void UnFreezeX() {
-        rigid.constraints = RigidbodyConstraints2D.FreezeRotation;
+    public void VelocityZero() {
+        capsuleCollider.attachedRigidbody.velocity = Vector2.zero;
     }
 }

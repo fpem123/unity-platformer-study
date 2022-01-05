@@ -222,8 +222,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: baf5a524055efb148b43fa2490c90d57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  speed: 0
   maxSpeed: 4
   jumpPower: 16
+  invinciTime: 0
+  gameManagerObj: {fileID: 2086220488549418036, guid: c93c886eb36bd8f47955c67e478fa4e0, type: 3}
 --- !u!70 &55386063
 CapsuleCollider2D:
   m_ObjectHideFlags: 0

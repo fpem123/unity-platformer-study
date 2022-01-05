@@ -4,18 +4,23 @@ using UnityEngine;
 
 public class EnemyController : MonoBehaviour
 {
-    private int nextMove;
-    private float currentTime;
-
+    [SerializeField] private int point;
     [SerializeField] private float idleTimeMin;
     [SerializeField] private float idleTimeMax;
     [SerializeField] private float walkTimeMin;
     [SerializeField] private float walkTimeMax;
 
-    Rigidbody2D rigid;
-    CapsuleCollider2D capsuleCollider;
-    SpriteRenderer spriteRenderer;
-    Animator anim;
+    private int nextMove;
+    private float currentTime;
+    private bool isDead;
+    
+
+    [SerializeField] private GameManager gameManager;
+
+    private Rigidbody2D rigid;
+    private CapsuleCollider2D capsuleCollider;
+    private SpriteRenderer spriteRenderer;
+    private Animator anim;
 
 
     // Start is called before the first frame update
@@ -25,6 +30,7 @@ public class EnemyController : MonoBehaviour
         capsuleCollider = GetComponent<CapsuleCollider2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
+        isDead = false;
         Think();
     }
 
@@ -36,9 +42,11 @@ public class EnemyController : MonoBehaviour
 
     void FixedUpdate()
     {
-        Move();
-        CheckPlatform();
-        TimeCount();
+        if (!isDead) {
+            Move();
+            CheckPlatform();
+            TimeCount();
+        }
     }
 
     private void TimeCount() {
@@ -83,5 +91,26 @@ public class EnemyController : MonoBehaviour
         if (rayHit.collider == null){
             currentTime = 0;
         }
+    }
+
+    public void OnDamaged() {
+        spriteRenderer.color = new Color(1, 1, 1, 0.4f);
+
+        spriteRenderer.flipY = true;
+
+        capsuleCollider.enabled = false;
+
+        isDead = true;
+
+        rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
+
+        gameManager.UpStagePoint(point);
+
+        Invoke("DeActive", 5);
+    }
+
+    private void DeActive()
+    {
+        gameObject.SetActive(false);
     }
 }
