@@ -7995,6 +7995,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1029538907}
     - target: {fileID: 2086220488549418037, guid: c93c886eb36bd8f47955c67e478fa4e0, type: 3}
+      propertyPath: UIStartBtn
+      value: 
+      objectReference: {fileID: 1203557729}
+    - target: {fileID: 2086220488549418037, guid: c93c886eb36bd8f47955c67e478fa4e0, type: 3}
       propertyPath: stagePoint
       value: 0
       objectReference: {fileID: 0}
