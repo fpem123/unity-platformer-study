@@ -100,6 +100,8 @@ public class EnemyController : MonoBehaviour
 
         capsuleCollider.enabled = false;
 
+        rigid.constraints = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezeRotation;
+
         isDead = true;
 
         rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);

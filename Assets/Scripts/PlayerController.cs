@@ -14,6 +14,7 @@ public class PlayerController : MonoBehaviour
     private bool isGround = false;
 
     [SerializeField] private GameManager gameManager;
+    [SerializeField] private SoundManager soundManager;
 
     private Rigidbody2D rigid;
     private SpriteRenderer spriteRenderer;
@@ -100,6 +101,7 @@ public class PlayerController : MonoBehaviour
             isGround = false;
             rigid.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
             anim.SetBool("isJump", isJump);
+            soundManager.PlaySound("JUMP");
         }
     }
 
@@ -140,12 +142,14 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other) {
         if (other.gameObject.tag == "Item") {
+            soundManager.PlaySound("ITEM");
             ItemController itemController = other.GetComponent<ItemController>();
             
             // Deactive Item
             itemController.DeactiveItem();
         }
         else if (other.gameObject.tag == "Finish") {
+            soundManager.PlaySound("FINISH");
             gameManager.NextStage();
         }
     }
@@ -153,6 +157,8 @@ public class PlayerController : MonoBehaviour
 
     private void OnAttack(Transform enemy) {
         AttackReaction();
+        
+        soundManager.PlaySound("ATTACK");
 
         EnemyController enemyController = enemy.GetComponent<EnemyController>();
         enemyController.OnDamaged();
@@ -163,7 +169,7 @@ public class PlayerController : MonoBehaviour
     }
 
 
-    private void OnDamaged(Vector2 targetPos) {
+    public void OnDamaged(Vector2 targetPos) {
         gameManager.HealthDown();
 
         gameObject.layer = 9;
@@ -173,6 +179,8 @@ public class PlayerController : MonoBehaviour
         int direction = transform.position.x - targetPos.x > 0 ? 1 : -1;
 
         rigid.AddForce(new Vector2(direction, 1) * 7, ForceMode2D.Impulse);
+
+        soundManager.PlaySound("DAMAGED");
 
         anim.SetTrigger("doDamaged");
 
@@ -187,7 +195,11 @@ public class PlayerController : MonoBehaviour
     public void OnDead() {
         spriteRenderer.color = new Color(1, 1, 1, 0.4f);
 
+        soundManager.PlaySound("DIE");
+
         spriteRenderer.flipY = true;
+
+        rigid.constraints = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezeRotation;
 
         capsuleCollider.enabled = false;
 
